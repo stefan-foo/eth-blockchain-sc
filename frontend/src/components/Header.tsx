@@ -11,7 +11,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-gray-800 text-white p-2 flex justify-between items-center shadow-md">
+    <header className="bg-gray-800 text-white p-2 flex justify-between items-center shadow-md fixed h-14 w-full">
       <h1 className="text-xl font-bold">dGameBet</h1>
       <div className="flex flex-col items-end">
         <div className="text-sm">

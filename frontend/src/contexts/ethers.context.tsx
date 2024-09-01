@@ -71,11 +71,13 @@ export function EthersStateProvider({ children }: EthersStateProviderProps) {
 
   useEffect(() => {
     async function initializeFactory() {
+      const factoryAddress = gameBetFactory.address();
+      console.log(factoryAddress);
       if (!provider) return setFactoryContract(null);
-      if (!gameBetFactory.address) return setFactoryContract(null);
+      if (!factoryAddress) return setFactoryContract(null);
 
       const contract = new Contract(
-        gameBetFactory.address,
+        factoryAddress,
         gameBetFactory.abi,
         await provider.getSigner()
       ) as BaseContract as GameBetFactory;

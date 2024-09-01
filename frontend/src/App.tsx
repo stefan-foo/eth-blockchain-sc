@@ -326,7 +326,7 @@ function App() {
       <div className="flex-shrink-0">
         <Header />
       </div>
-      <div className="w-full flex flex-grow">
+      <div className="w-full flex flex-grow mt-14">
         <div className="p-4 w-2/5 bg-gray-100 border-r">
           <CreateBet />
         </div>

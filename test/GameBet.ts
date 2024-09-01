@@ -128,6 +128,27 @@ describe("GameBetFactory and GameBet Contracts", function () {
       ).to.be.revertedWith("You have already placed a bet");
     });
 
+    it("Should not allow placing bets on matches that have started", async function () {
+      const {
+        gameBet,
+        booker,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+      const betAmount = hre.ethers.parseEther("1");
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      const newKickOffTime = Math.floor(Date.now() / 1000) + 2;
+      await gameBet.connect(booker).updateKickOffTime(newKickOffTime);
+      await new Promise((r) => setTimeout(r, 2000));
+
+      await expect(
+        gameBet.connect(bettor).placeBet(OUTCOME_AWAY, { value: betAmount })
+      ).to.be.revertedWith("Bets can't be placed while match is in progress");
+    });
+
     it("Should revert if bet amount is zero", async function () {
       const {
         gameBet,

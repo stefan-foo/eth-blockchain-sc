@@ -5,7 +5,7 @@ import gameBetJson from "./core/contracts/GameBet.sol/GameBet.json";
 export const gameBetFactory = {
   abi: gameBetFactoryJson.abi,
   contractName: contractName,
-  address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  address: () => process.env.REACT_APP_GAME_BET_FACTORY_ADDRESS,
 };
 
 export const gameBet = {

@@ -335,7 +335,9 @@ export interface GameBet extends BaseContract {
   getFunction(
     nameOrSignature: "away"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(nameOrSignature: "bets"): TypedContractMethod<
+  getFunction(
+    nameOrSignature: "bets"
+  ): TypedContractMethod<
     [arg0: AddressLike],
     [
       [bigint, bigint, boolean] & {

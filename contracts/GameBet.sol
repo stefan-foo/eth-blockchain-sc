@@ -85,6 +85,10 @@ contract GameBet {
     function placeBet(Outcome pick) public payable {
         require(msg.value > 0, "Bet amount must be greater than zero");
         require(result == Outcome.Open, "Match has finished");
+        require(
+            kickOffTime > block.timestamp,
+            "Bets can't be placed while match is in progress"
+        );
         require(pick == Outcome.Home || pick == Outcome.Away, "Invalid team");
 
         Bet storage bet = bets[msg.sender];
