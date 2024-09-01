@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./GameBetFactory.sol";
+
 contract GameBet {
     string public home;
     string public away;
-    uint256 public kickoffTime;
-    address public organizer;
+    uint256 public kickOffTime;
+    uint256 public resolvedTimestamp;
+    address payable public organizer;
     Outcome public result;
     mapping(address => Bet) public bets;
-    address[] public betters;
+    address payable[] public betters;
     uint public totalPool;
     uint public totalBetHome;
     uint public totalBetAway;
+    GameBetFactory factory;
 
     enum Outcome {
         Open,
@@ -29,24 +33,52 @@ contract GameBet {
     event BetPlaced(address indexed better, Outcome team, uint amount);
     event ResultDeclared(Outcome result);
     event PayoutClaimed(address indexed better, uint amount);
-    event KickoffTimeUpdated(uint newKickoffTime);
+    event KickOffTimeUpdated(uint newKickOffTime);
+    event MatchFinished(
+        address indexed matchAddress,
+        address indexed organizer
+    );
 
     modifier onlyOrganizer() {
-        require(msg.sender == organizer, "Only organizer can call this");
+        require(
+            msg.sender == organizer,
+            "Only organizer can perform this operation"
+        );
+        _;
+    }
+
+    modifier betResolved() {
+        require(result != Outcome.Open, "Match is not finished");
+        _;
+    }
+
+    modifier validOutcome(Outcome _result) {
+        require(
+            _result == Outcome.Home ||
+                _result == Outcome.Away ||
+                _result == Outcome.Draw,
+            "Invalid result"
+        );
         _;
     }
 
     constructor(
         string memory _home,
         string memory _away,
-        uint _kickoffTime,
-        address _organizer
+        uint _kickOffTime,
+        address _organizer,
+        address _factory
     ) {
+        require(
+            _kickOffTime > block.timestamp,
+            "Kick off time must be in the future"
+        );
         home = _home;
         away = _away;
-        kickoffTime = _kickoffTime;
-        organizer = _organizer;
+        kickOffTime = _kickOffTime;
+        organizer = payable(_organizer);
         result = Outcome.Open;
+        factory = GameBetFactory(_factory);
     }
 
     function placeBet(Outcome pick) public payable {
@@ -61,7 +93,7 @@ contract GameBet {
         bet.amount = msg.value;
         bet.hasClaimed = false;
 
-        betters.push(msg.sender);
+        betters.push(payable(msg.sender));
         totalPool += msg.value;
 
         if (pick == Outcome.Home) {
@@ -73,36 +105,34 @@ contract GameBet {
         emit BetPlaced(msg.sender, pick, msg.value);
     }
 
-    function resolve(Outcome _result) public onlyOrganizer {
-        require(result != Outcome.Open, "Result has already been declared");
-        require(
-            _result == Outcome.Home ||
-                _result == Outcome.Away ||
-                _result == Outcome.Draw,
-            "Invalid result"
-        );
+    function resolve(
+        Outcome _result
+    ) public onlyOrganizer validOutcome(_result) {
+        require(result == Outcome.Open, "Result has already been declared");
 
         result = _result;
+        resolvedTimestamp = block.timestamp;
+
+        if (result != Outcome.Draw) {
+            uint organizerFee = (totalPool * 5) / 100;
+            payable(organizer).transfer(organizerFee);
+            totalPool -= organizerFee;
+        }
+
+        factory.markBetAsResolved();
 
         emit ResultDeclared(_result);
     }
 
-    function claimPayout() public {
-        require(result == Outcome.Open, "Match is not finished");
-        require(!bets[msg.sender].hasClaimed, "Payout already claimed");
-
+    function claimPayout() public betResolved {
         Bet storage bet = bets[msg.sender];
-        uint payout = 0;
+        require(!bet.hasClaimed, "Payout already claimed");
+        require(
+            result == Outcome.Draw || result == bet.team,
+            "Attempted to claim lost bet"
+        );
 
-        if (result == Outcome.Draw) {
-            payout = bet.amount;
-        } else if (result == bet.team) {
-            if (result == Outcome.Home) {
-                payout = (((totalPool * 95) / 100) * bet.amount) / totalBetHome;
-            } else if (result == Outcome.Away) {
-                payout = (((totalPool * 95) / 100) * bet.amount) / totalBetAway;
-            }
-        }
+        uint payout = calculatePayout(bet);
 
         bet.hasClaimed = true;
 
@@ -111,19 +141,6 @@ contract GameBet {
         }
 
         emit PayoutClaimed(msg.sender, payout);
-    }
-
-    function updateKickoffTime(uint256 _newKickoffTime) public onlyOrganizer {
-        require(
-            result != Outcome.Open,
-            "Cannot update kickoff time after result is declared"
-        );
-        kickoffTime = _newKickoffTime;
-        emit KickoffTimeUpdated(_newKickoffTime);
-    }
-
-    function rateOrganizer(uint rating) public {
-        require(rating >= 1 && rating <= 5, "Rating must be between 1 and 5");
     }
 
     function getContractDetails()
@@ -144,7 +161,7 @@ contract GameBet {
         return (
             home,
             away,
-            kickoffTime,
+            kickOffTime,
             organizer,
             result,
             totalPool,
@@ -152,5 +169,40 @@ contract GameBet {
             totalBetAway,
             betters.length
         );
+    }
+
+    function updateKickOffTime(uint256 _newKickOffTime) public onlyOrganizer {
+        require(
+            _newKickOffTime > block.timestamp,
+            "New kickoff time must be in the future"
+        );
+        require(
+            result == Outcome.Open,
+            "Cannot update kickoff time after result is declared"
+        );
+        kickOffTime = _newKickOffTime;
+        emit KickOffTimeUpdated(_newKickOffTime);
+    }
+
+    function rateOrganizer(uint rating) public {
+        Bet storage bet = bets[msg.sender];
+        require(
+            bet.amount > 0,
+            "You must have placed a bet to rate the organizer."
+        );
+        require(rating >= 1 && rating <= 5, "Rating must be between 1 and 5");
+
+        factory.saveRating(organizer, rating);
+    }
+
+    function calculatePayout(Bet memory bet) private view returns (uint) {
+        if (result == Outcome.Draw) {
+            return bet.amount;
+        }
+
+        uint winnerPool = (result == Outcome.Home)
+            ? totalBetHome
+            : totalBetAway;
+        return ((totalPool * bet.amount) / winnerPool);
     }
 }
