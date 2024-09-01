@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { ethers } from "ethers";
 import { Outcome } from "../core/types/Outcome";
 import { BetInfo } from "../core/model/BetInfo";
+import { useEthersContext } from "../contexts/ethers.context";
+import { compareAddresses } from "../core/lib/blockchain-util";
 
 interface BetCardProps {
   bet: BetInfo;
@@ -9,7 +11,10 @@ interface BetCardProps {
 }
 
 const BetCard: React.FC<BetCardProps> = ({ bet, onPlaceBet }) => {
+  const { account } = useEthersContext();
   const [amount, setAmount] = useState<string>("");
+
+  const isUserOrganizer = compareAddresses(account, bet.organizer);
 
   const handlePlaceBet = (outcome: Outcome) => {
     if (amount) {
@@ -30,11 +35,11 @@ const BetCard: React.FC<BetCardProps> = ({ bet, onPlaceBet }) => {
         >
           {bet.homeTeam}
         </div>
-        {!bet.isResolved && (
+        <div className="text-sm text-gray-500 mb-2">
+          Total Bets: {ethers.formatEther(BigInt(bet.totalBetHome))} ETH
+        </div>
+        {!bet.isResolved && !isUserOrganizer && (
           <>
-            <div className="text-sm text-gray-500 mb-2">
-              Total Bets: {ethers.formatEther(bet.totalBetHome)} ETH
-            </div>
             <button
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
               onClick={() => handlePlaceBet(Outcome.HOME)}
@@ -89,11 +94,11 @@ const BetCard: React.FC<BetCardProps> = ({ bet, onPlaceBet }) => {
         >
           {bet.awayTeam}
         </div>
-        {!bet.isResolved && (
+        <div className="text-sm text-gray-500 mb-2">
+          Total Bets: {ethers.formatEther(BigInt(bet.totalBetAway))} ETH
+        </div>
+        {!bet.isResolved && !isUserOrganizer && (
           <>
-            <div className="text-sm text-gray-500 mb-2">
-              Total Bets: {ethers.formatEther(bet.totalBetAway)} ETH
-            </div>
             <button
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
               onClick={() => handlePlaceBet(Outcome.AWAY)}

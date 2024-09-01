@@ -155,7 +155,8 @@ contract GameBet {
             uint,
             uint,
             uint,
-            uint
+            uint,
+            Bet memory
         )
     {
         return (
@@ -167,7 +168,8 @@ contract GameBet {
             totalPool,
             totalBetHome,
             totalBetAway,
-            betters.length
+            betters.length,
+            bets[msg.sender]
         );
     }
 

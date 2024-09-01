@@ -18,64 +18,71 @@ function App() {
   const [resolvedBets, setResolvedBets] = useState<BetInfo[]>([]);
 
   const fetchBets = useCallback(async () => {
-    if (factoryContract) {
-      const openBetsAddresses = await factoryContract.getOpenBets();
-      const resolvedBetsAddresses = await factoryContract.getResolvedBets();
+    if (!factoryContract) return;
 
-      const fetchBetDetails = async (
-        betAddresses: string[],
-        sortAscending: boolean
-      ): Promise<BetInfo[]> => {
-        const bets: BetInfo[] = [];
-        for (const address of betAddresses) {
-          const gameBetContract = new ethers.Contract(
-            address,
-            gameBet.abi,
-            provider
-          ) as BaseContract as GameBet;
-          const [
-            homeTeam,
-            awayTeam,
-            kickoffTime,
-            organizer,
-            outcome,
-            totalPool,
-            totalBetHome,
-            totalBetAway,
-            numOfBettors,
-          ] = await gameBetContract.getContractDetails();
+    const openBetsAddresses = await factoryContract.getOpenBets();
+    const resolvedBetsAddresses = await factoryContract.getResolvedBets();
 
-          bets.push({
-            address,
-            homeTeam,
-            awayTeam,
-            kickoffTime: new Date(Number(kickoffTime) * 1000),
-            totalBetHome: Number(totalBetHome),
-            totalBetAway: Number(totalBetAway),
-            isResolved: Number(outcome) !== Outcome.OPEN,
-            outcome: Number(outcome) as Outcome,
-            organizer,
-            totalPool: Number(totalPool),
-            numOfBettors: Number(numOfBettors),
-          });
-        }
+    const fetchBetDetails = async (
+      betAddresses: string[],
+      sortAscending: boolean
+    ): Promise<BetInfo[]> => {
+      const bets: BetInfo[] = [];
+      for (const address of betAddresses) {
+        const gameBetContract = new ethers.Contract(
+          address,
+          gameBet.abi,
+          provider
+        ) as BaseContract as GameBet;
+        const [
+          homeTeam,
+          awayTeam,
+          kickoffTime,
+          organizer,
+          outcome,
+          totalPool,
+          totalBetHome,
+          totalBetAway,
+          numOfBettors,
+          placed,
+        ] = await gameBetContract.getContractDetails();
+        console.log(await gameBetContract.getContractDetails());
+        bets.push({
+          address,
+          homeTeam,
+          awayTeam,
+          kickoffTime: new Date(Number(kickoffTime) * 1000),
+          totalBetHome: Number(totalBetHome),
+          totalBetAway: Number(totalBetAway),
+          isResolved: Number(outcome) !== Outcome.OPEN,
+          outcome: Number(outcome) as Outcome,
+          organizer,
+          totalPool: Number(totalPool),
+          numOfBettors: Number(numOfBettors),
+          placed,
+        });
+      }
 
-        if (sortAscending)
-          bets.sort(
-            (a, b) => a.kickoffTime.getTime() - b.kickoffTime.getTime()
-          );
-        else
-          bets.sort(
-            (a, b) => b.kickoffTime.getTime() - a.kickoffTime.getTime()
-          );
+      if (sortAscending)
+        bets.sort((a, b) => a.kickoffTime.getTime() - b.kickoffTime.getTime());
+      else
+        bets.sort((a, b) => b.kickoffTime.getTime() - a.kickoffTime.getTime());
 
-        return bets;
-      };
+      return bets;
+    };
 
-      setOpenBets(await fetchBetDetails(openBetsAddresses, true));
-      setResolvedBets(await fetchBetDetails(resolvedBetsAddresses, false));
-    }
+    setOpenBets(await fetchBetDetails(openBetsAddresses, true));
+    setResolvedBets(await fetchBetDetails(resolvedBetsAddresses, false));
   }, [factoryContract, provider]);
+
+  useEffect(() => {
+    factoryContract?.on(factoryContract.getEvent("GameBetCreated"), fetchBets);
+    factoryContract?.on(factoryContract.getEvent("GameBetResolved"), fetchBets);
+    return () => {
+      factoryContract?.off("GameBetCreated", fetchBets);
+      factoryContract?.off("GameBetResolved", fetchBets);
+    };
+  }, [factoryContract, fetchBets]);
 
   useEffect(() => {
     fetchBets();
@@ -97,8 +104,8 @@ function App() {
           await tx.wait();
           alert("Bet placed successfully");
           fetchBets();
-        } catch (error) {
-          console.error("Error placing bet:", error);
+        } catch (error: any) {
+          alert(error.reason ?? "Unknown error");
         }
       }
     },
@@ -117,9 +124,9 @@ function App() {
     {
       label: "Upcoming",
       content: (
-        <div>
+        <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
           {openBets.map((bet) => (
-            <BetCard bet={bet} onPlaceBet={handlePlaceBet} />
+            <BetCard key={bet.address} bet={bet} onPlaceBet={handlePlaceBet} />
           ))}
         </div>
       ),
@@ -127,9 +134,9 @@ function App() {
     {
       label: "Finished",
       content: (
-        <div>
+        <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
           {resolvedBets.map((bet) => (
-            <BetCard bet={bet} onPlaceBet={handlePlaceBet} />
+            <BetCard key={bet.address} bet={bet} onPlaceBet={handlePlaceBet} />
           ))}
         </div>
       ),
@@ -139,9 +146,13 @@ function App() {
   return (
     <div className="App">
       <Header />
-      <div className="p-4">
-        <Tabs tabs={tabs} />
-        <CreateBet />
+      <div className="flex">
+        <div className="p-4 w-2/5">
+          <CreateBet />
+        </div>
+        <div className="h-full w-full">
+          <Tabs tabs={tabs} />
+        </div>
       </div>
     </div>
   );

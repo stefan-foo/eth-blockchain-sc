@@ -41,7 +41,7 @@ const CreateBet: React.FC = () => {
   return (
     <div className="p-6 bg-gray-100 rounded-lg shadow-lg max-w-lg mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-        Create New Game Bet
+        Create New Bet
       </h2>
       {error && <div className="mb-4 text-red-600 text-center">{error}</div>}
       <div className="mb-4">

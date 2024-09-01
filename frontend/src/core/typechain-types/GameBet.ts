@@ -279,7 +279,20 @@ export interface GameBet extends BaseContract {
 
   getContractDetails: TypedContractMethod<
     [],
-    [[string, string, bigint, string, bigint, bigint, bigint, bigint, bigint]],
+    [
+      [
+        string,
+        string,
+        bigint,
+        string,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        boolean
+      ]
+    ],
     "view"
   >;
 
@@ -322,9 +335,7 @@ export interface GameBet extends BaseContract {
   getFunction(
     nameOrSignature: "away"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "bets"
-  ): TypedContractMethod<
+  getFunction(nameOrSignature: "bets"): TypedContractMethod<
     [arg0: AddressLike],
     [
       [bigint, bigint, boolean] & {
@@ -345,7 +356,20 @@ export interface GameBet extends BaseContract {
     nameOrSignature: "getContractDetails"
   ): TypedContractMethod<
     [],
-    [[string, string, bigint, string, bigint, bigint, bigint, bigint, bigint]],
+    [
+      [
+        string,
+        string,
+        bigint,
+        string,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        bigint,
+        boolean
+      ]
+    ],
     "view"
   >;
   getFunction(

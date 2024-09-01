@@ -12,4 +12,5 @@ export interface BetInfo {
   outcome: Outcome;
   numOfBettors: number;
   totalPool: number;
+  placed: boolean;
 }
