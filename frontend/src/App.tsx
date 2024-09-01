@@ -7,13 +7,14 @@ import { useEthersContext } from "./contexts/ethers.context";
 import CreateBet from "./components/CreateBet";
 import BetCard from "./components/BetCard";
 import { BetInfo } from "./core/model/BetInfo";
-import { gameBet } from "./constants";
+import { gameBet, gameBetFactory } from "./constants";
 import { Outcome } from "./core/types/Outcome";
 import Header from "./components/Header";
 import Tabs from "./components/Tabs";
 import { BetPick } from "./core/model/BetPick";
 import PlacedBetCard from "./components/PlacedBetCard";
 import { useSnackbar } from "./contexts/snackbar.context";
+import { compareAddresses } from "./util/blockchain-util";
 
 function App() {
   const { account, provider, factoryContract } = useEthersContext();
@@ -233,6 +234,7 @@ function App() {
       try {
         const tx = await gameBetContract.rateOrganizer(rating);
         await tx.wait();
+
         openSnackbar({
           autoHideDuration: 3000,
           message: "Organizer rated",
@@ -263,6 +265,23 @@ function App() {
           Math.floor(kickoffTime.getTime() / 1000)
         );
         await tx.wait();
+
+        const kickOffTime = new Date(
+          Number(await gameBetContract.kickOffTime()) * 1000
+        );
+
+        const updatedBets = openBets.map((bet) => {
+          if (compareAddresses(bet.address, betAddress)) {
+            return {
+              ...bet,
+              kickoffTime: kickOffTime,
+            };
+          }
+          return bet;
+        });
+
+        setOpenBets(updatedBets);
+
         openSnackbar({
           autoHideDuration: 3000,
           message: "Kickoff time updated",
@@ -275,7 +294,7 @@ function App() {
         });
       }
     },
-    [provider, account, openSnackbar]
+    [provider, account, openSnackbar, openBets]
   );
 
   if (!window.ethereum) {
