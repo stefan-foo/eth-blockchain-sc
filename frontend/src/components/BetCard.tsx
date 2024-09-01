@@ -3,10 +3,10 @@ import { ethers } from "ethers";
 import { Outcome } from "../core/types/Outcome";
 import { BetInfo } from "../core/model/BetInfo";
 import { useEthersContext } from "../contexts/ethers.context";
-import { compareAddresses } from "../core/lib/blockchain-util";
 import ResolveDialog from "./ResolveDialog";
 import KickoffTimeDialog from "./KickoffTimeDialog";
 import { getOutcomeStyle } from "../util/outcome-style.util";
+import { compareAddresses } from "../util/blockchain-util";
 
 interface BetCardProps {
   bet: BetInfo;

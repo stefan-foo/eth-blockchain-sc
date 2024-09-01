@@ -28,7 +28,9 @@ const Tabs: React.FC<TabsProps> = ({ tabs }) => {
           </button>
         ))}
       </div>
-      <div className="p-4">{tabs[activeTab].content}</div>
+      <div className="p-4 overflow-y-auto h-full max-h-full">
+        {tabs[activeTab].content}
+      </div>
     </div>
   );
 };

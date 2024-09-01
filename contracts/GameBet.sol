@@ -11,7 +11,7 @@ contract GameBet {
     address payable public organizer;
     Outcome public result;
     mapping(address => Bet) public bets;
-    address payable[] public betters;
+    address payable[] public bettors;
     uint public totalPool;
     uint public totalBetHome;
     uint public totalBetAway;
@@ -94,7 +94,7 @@ contract GameBet {
         bet.amount = msg.value;
         bet.hasClaimed = false;
 
-        betters.push(payable(msg.sender));
+        bettors.push(payable(msg.sender));
         totalPool += msg.value;
 
         if (pick == Outcome.Home) {
@@ -167,7 +167,7 @@ contract GameBet {
             totalPool,
             totalBetHome,
             totalBetAway,
-            betters.length,
+            bettors.length,
             bets[msg.sender]
         );
     }

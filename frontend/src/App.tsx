@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BaseContract, ethers } from "ethers";
 import { GameBet } from "./core/typechain-types";
 import NoWalletDetected from "./components/NoWalletDetected";
@@ -13,12 +13,14 @@ import Header from "./components/Header";
 import Tabs from "./components/Tabs";
 import { BetPick } from "./core/model/BetPick";
 import PlacedBetCard from "./components/PlacedBetCard";
+import { useSnackbar } from "./contexts/snackbar.context";
 
 function App() {
   const { account, provider, factoryContract } = useEthersContext();
   const [openBets, setOpenBets] = useState<BetInfo[]>([]);
   const [resolvedBets, setResolvedBets] = useState<BetInfo[]>([]);
   const [placedBets, setPlacedBets] = useState<BetPick[]>([]);
+  const { openSnackbar } = useSnackbar();
 
   const fetchBets = useCallback(async () => {
     if (!factoryContract) return;
@@ -122,8 +124,8 @@ function App() {
     factoryContract?.on(factoryContract.getEvent("GameBetCreated"), fetchBets);
     factoryContract?.on(factoryContract.getEvent("GameBetResolved"), fetchBets);
     return () => {
-      factoryContract?.off("GameBetCreated", fetchBets);
-      factoryContract?.off("GameBetResolved", fetchBets);
+      factoryContract?.off("GameBetCreated");
+      factoryContract?.off("GameBetResolved");
     };
   }, [factoryContract, fetchBets]);
 
@@ -131,108 +133,150 @@ function App() {
     fetchBets();
   }, [fetchBets]);
 
-  const handlePlaceBet = async (
-    betAddress: string,
-    outcome: Outcome,
-    amount: string
-  ) => {
-    if (!provider || !account) {
-      return;
-    }
+  const handlePlaceBet = useCallback(
+    async (betAddress: string, outcome: Outcome, amount: string) => {
+      if (!provider || !account) return;
 
-    const gameBetContract = new ethers.Contract(
-      betAddress,
-      gameBet.abi,
-      await provider.getSigner()
-    ) as BaseContract as GameBet;
+      const gameBetContract = new ethers.Contract(
+        betAddress,
+        gameBet.abi,
+        await provider.getSigner()
+      ) as BaseContract as GameBet;
 
-    try {
-      const tx = await gameBetContract.placeBet(outcome, {
-        value: ethers.parseEther(amount),
-      });
-      await tx.wait();
-      alert("Bet placed successfully");
-    } catch (error: any) {
-      alert(error.reason ?? "Unknown error");
-    }
-  };
+      try {
+        const tx = await gameBetContract.placeBet(outcome, {
+          value: ethers.parseEther(amount),
+        });
+        await tx.wait();
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: "Bet placed successfully",
+        });
+      } catch (error: any) {
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: error?.reason ?? "Unknown error",
+          severity: "error",
+        });
+      }
+    },
+    [provider, account, openSnackbar]
+  );
 
-  const handleClaimPayout = async (betAddress: string) => {
-    if (!provider || !account) {
-      return;
-    }
+  const handleClaimPayout = useCallback(
+    async (betAddress: string) => {
+      if (!provider || !account) return;
 
-    const gameBetContract = new ethers.Contract(
-      betAddress,
-      gameBet.abi,
-      await provider.getSigner()
-    ) as BaseContract as GameBet;
+      const gameBetContract = new ethers.Contract(
+        betAddress,
+        gameBet.abi,
+        await provider.getSigner()
+      ) as BaseContract as GameBet;
 
-    try {
-      const tx = await gameBetContract.claimPayout();
-      await tx.wait();
-      alert("Claimed successfully");
-      fetchBets();
-    } catch (error: any) {
-      alert(error.reason ?? "Unknown error");
-    }
-  };
+      try {
+        const tx = await gameBetContract.claimPayout();
+        await tx.wait();
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: "Payout Claimed",
+        });
+        fetchBets();
+      } catch (error: any) {
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: error?.reason ?? "Unknown error",
+          severity: "error",
+        });
+      }
+    },
+    [provider, account, fetchBets, openSnackbar]
+  );
 
-  const handleResolveBet = async (betAddress: string, outcome: Outcome) => {
-    if (!provider || !account) return;
+  const handleResolveBet = useCallback(
+    async (betAddress: string, outcome: Outcome) => {
+      if (!provider || !account) return;
 
-    const gameBetContract = new ethers.Contract(
-      betAddress,
-      gameBet.abi,
-      await provider.getSigner()
-    ) as BaseContract as GameBet;
+      const gameBetContract = new ethers.Contract(
+        betAddress,
+        gameBet.abi,
+        await provider.getSigner()
+      ) as BaseContract as GameBet;
 
-    try {
-      const tx = await gameBetContract.resolve(outcome);
-      await tx.wait();
-      alert("Bet resolved");
-    } catch (error: any) {
-      alert(error.reason ?? "Unknown error");
-    }
-  };
+      try {
+        const tx = await gameBetContract.resolve(outcome);
+        await tx.wait();
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: "Bet resolved",
+        });
+      } catch (error: any) {
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: error?.reason ?? "Unknown error",
+          severity: "error",
+        });
+      }
+    },
+    [provider, account, openSnackbar]
+  );
 
-  const handleNewRating = async (betAddress: string, rating: number) => {
-    if (!provider || !account) return;
+  const handleNewRating = useCallback(
+    async (betAddress: string, rating: number) => {
+      if (!provider || !account) return;
 
-    const gameBetContract = new ethers.Contract(
-      betAddress,
-      gameBet.abi,
-      await provider.getSigner()
-    ) as BaseContract as GameBet;
+      const gameBetContract = new ethers.Contract(
+        betAddress,
+        gameBet.abi,
+        await provider.getSigner()
+      ) as BaseContract as GameBet;
 
-    try {
-      const tx = await gameBetContract.rateOrganizer(rating);
-      await tx.wait();
-      alert("Organizer rated");
-    } catch (error: any) {
-      alert(error.reason ?? "Unknown error");
-    }
-  };
+      try {
+        const tx = await gameBetContract.rateOrganizer(rating);
+        await tx.wait();
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: "Organizer rated",
+        });
+      } catch (error: any) {
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: error?.reason ?? "Unknown error",
+          severity: "error",
+        });
+      }
+    },
+    [provider, account, openSnackbar]
+  );
 
-  const handleUpdateKickoff = async (betAddress: string, kickoffTime: Date) => {
-    if (!provider || !account) return;
+  const handleUpdateKickoff = useCallback(
+    async (betAddress: string, kickoffTime: Date) => {
+      if (!provider || !account) return;
 
-    const gameBetContract = new ethers.Contract(
-      betAddress,
-      gameBet.abi,
-      await provider.getSigner()
-    ) as BaseContract as GameBet;
+      const gameBetContract = new ethers.Contract(
+        betAddress,
+        gameBet.abi,
+        await provider.getSigner()
+      ) as BaseContract as GameBet;
 
-    try {
-      const tx = await gameBetContract.updateKickOffTime(
-        Math.floor(kickoffTime.getTime() / 1000)
-      );
-      await tx.wait();
-      alert("Kickofftime updated");
-    } catch (error: any) {
-      alert(error.reason ?? "Unknown error");
-    }
-  };
+      try {
+        const tx = await gameBetContract.updateKickOffTime(
+          Math.floor(kickoffTime.getTime() / 1000)
+        );
+        await tx.wait();
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: "Kickoff time updated",
+        });
+      } catch (error: any) {
+        openSnackbar({
+          autoHideDuration: 3000,
+          message: error?.reason ?? "Unknown error",
+          severity: "error",
+        });
+      }
+    },
+    [provider, account, openSnackbar]
+  );
 
   if (!window.ethereum) {
     return <NoWalletDetected />;
@@ -246,7 +290,7 @@ function App() {
     {
       label: "Upcoming",
       content: (
-        <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
+        <div className="overflow-y-auto">
           {openBets.map((bet) => (
             <BetCard
               key={bet.address}
@@ -262,7 +306,7 @@ function App() {
     {
       label: "Finished",
       content: (
-        <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
+        <div className="overflow-y-auto">
           {resolvedBets.map((bet) => (
             <BetCard
               key={bet.address}
@@ -278,9 +322,11 @@ function App() {
   ];
 
   return (
-    <div className="App">
-      <Header />
-      <div className="h-full w-full flex">
+    <div className="flex-col flex">
+      <div className="flex-shrink-0">
+        <Header />
+      </div>
+      <div className="w-full flex flex-grow">
         <div className="p-4 w-2/5 bg-gray-100 border-r">
           <CreateBet />
         </div>

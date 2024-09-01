@@ -6,11 +6,7 @@ interface RatingDialogProps {
   betAddress: string;
 }
 
-const RatingDialog: React.FC<RatingDialogProps> = ({
-  onClose,
-  onConfirm,
-  betAddress,
-}) => {
+const RatingDialog: React.FC<RatingDialogProps> = ({ onClose, onConfirm }) => {
   const [rating, setRating] = useState<number>(0);
 
   const handleRatingChange = (newRating: number) => {

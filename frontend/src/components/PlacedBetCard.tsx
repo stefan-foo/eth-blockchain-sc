@@ -50,7 +50,12 @@ const PlacedBetCard: React.FC<PlacedBetCardProps> = ({
             Average Rating:{" "}
             {bet.ratingCount === 0 ? "/" : bet.averageRating.toFixed(1)}
           </div>
-          <div className="text-gray-500">({bet.ratingCount} reviews)</div>
+          <div className="text-gray-500">
+            {" "}
+            {`(${bet.ratingCount} ${
+              bet.ratingCount === 1 ? " review" : "reviews"
+            })`}
+          </div>
         </div>
       </div>
 
