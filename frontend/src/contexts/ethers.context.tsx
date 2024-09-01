@@ -72,6 +72,7 @@ export function EthersStateProvider({ children }: EthersStateProviderProps) {
   useEffect(() => {
     async function initializeFactory() {
       if (!provider) return setFactoryContract(null);
+      if (!gameBetFactory.address) return setFactoryContract(null);
 
       const contract = new Contract(
         gameBetFactory.address,

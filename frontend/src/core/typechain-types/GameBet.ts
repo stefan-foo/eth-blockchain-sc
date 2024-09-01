@@ -42,7 +42,7 @@ export interface GameBetInterface extends Interface {
     nameOrSignature:
       | "away"
       | "bets"
-      | "betters"
+      | "bettors"
       | "claimPayout"
       | "getContractDetails"
       | "home"
@@ -64,14 +64,13 @@ export interface GameBetInterface extends Interface {
       | "BetPlaced"
       | "KickOffTimeUpdated"
       | "MatchFinished"
-      | "PayoutClaimed"
       | "ResultDeclared"
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "away", values?: undefined): string;
   encodeFunctionData(functionFragment: "bets", values: [AddressLike]): string;
   encodeFunctionData(
-    functionFragment: "betters",
+    functionFragment: "bettors",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -121,7 +120,7 @@ export interface GameBetInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "away", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "bets", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "betters", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "bettors", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "claimPayout",
     data: BytesLike
@@ -205,19 +204,6 @@ export namespace MatchFinishedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace PayoutClaimedEvent {
-  export type InputTuple = [better: AddressLike, amount: BigNumberish];
-  export type OutputTuple = [better: string, amount: bigint];
-  export interface OutputObject {
-    better: string;
-    amount: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace ResultDeclaredEvent {
   export type InputTuple = [result: BigNumberish];
   export type OutputTuple = [result: bigint];
@@ -287,7 +273,7 @@ export interface GameBet extends BaseContract {
     "view"
   >;
 
-  betters: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
+  bettors: TypedContractMethod<[arg0: BigNumberish], [string], "view">;
 
   claimPayout: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -349,9 +335,7 @@ export interface GameBet extends BaseContract {
   getFunction(
     nameOrSignature: "away"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "bets"
-  ): TypedContractMethod<
+  getFunction(nameOrSignature: "bets"): TypedContractMethod<
     [arg0: AddressLike],
     [
       [bigint, bigint, boolean] & {
@@ -363,7 +347,7 @@ export interface GameBet extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "betters"
+    nameOrSignature: "bettors"
   ): TypedContractMethod<[arg0: BigNumberish], [string], "view">;
   getFunction(
     nameOrSignature: "claimPayout"
@@ -447,13 +431,6 @@ export interface GameBet extends BaseContract {
     MatchFinishedEvent.OutputObject
   >;
   getEvent(
-    key: "PayoutClaimed"
-  ): TypedContractEvent<
-    PayoutClaimedEvent.InputTuple,
-    PayoutClaimedEvent.OutputTuple,
-    PayoutClaimedEvent.OutputObject
-  >;
-  getEvent(
     key: "ResultDeclared"
   ): TypedContractEvent<
     ResultDeclaredEvent.InputTuple,
@@ -493,17 +470,6 @@ export interface GameBet extends BaseContract {
       MatchFinishedEvent.InputTuple,
       MatchFinishedEvent.OutputTuple,
       MatchFinishedEvent.OutputObject
-    >;
-
-    "PayoutClaimed(address,uint256)": TypedContractEvent<
-      PayoutClaimedEvent.InputTuple,
-      PayoutClaimedEvent.OutputTuple,
-      PayoutClaimedEvent.OutputObject
-    >;
-    PayoutClaimed: TypedContractEvent<
-      PayoutClaimedEvent.InputTuple,
-      PayoutClaimedEvent.OutputTuple,
-      PayoutClaimedEvent.OutputObject
     >;
 
     "ResultDeclared(uint8)": TypedContractEvent<
