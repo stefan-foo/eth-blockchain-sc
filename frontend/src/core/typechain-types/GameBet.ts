@@ -23,6 +23,20 @@ import type {
   TypedContractMethod,
 } from "./common";
 
+export declare namespace GameBet {
+  export type BetStruct = {
+    team: BigNumberish;
+    amount: BigNumberish;
+    hasClaimed: boolean;
+  };
+
+  export type BetStructOutput = [
+    team: bigint,
+    amount: bigint,
+    hasClaimed: boolean
+  ] & { team: bigint; amount: bigint; hasClaimed: boolean };
+}
+
 export interface GameBetInterface extends Interface {
   getFunction(
     nameOrSignature:
@@ -290,7 +304,7 @@ export interface GameBet extends BaseContract {
         bigint,
         bigint,
         bigint,
-        boolean
+        GameBet.BetStructOutput
       ]
     ],
     "view"
@@ -335,7 +349,9 @@ export interface GameBet extends BaseContract {
   getFunction(
     nameOrSignature: "away"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(nameOrSignature: "bets"): TypedContractMethod<
+  getFunction(
+    nameOrSignature: "bets"
+  ): TypedContractMethod<
     [arg0: AddressLike],
     [
       [bigint, bigint, boolean] & {
@@ -367,7 +383,7 @@ export interface GameBet extends BaseContract {
         bigint,
         bigint,
         bigint,
-        boolean
+        GameBet.BetStructOutput
       ]
     ],
     "view"

@@ -10,7 +10,4 @@ export interface BetInfo {
   totalBetAway: number;
   isResolved: boolean;
   outcome: Outcome;
-  numOfBettors: number;
-  totalPool: number;
-  placed: boolean;
 }
