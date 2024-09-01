@@ -668,6 +668,34 @@ describe("GameBetFactory and GameBet Contracts", function () {
       );
     });
 
+    it("Should allow 2 users to rate bet", async function () {
+      const {
+        gameBet,
+        gameBetFactory,
+        booker,
+        bettors: [bettor1, bettor2],
+      } = await loadFixture(deployContractsFixture);
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      await gameBet
+        .connect(bettor1)
+        .placeBet(OUTCOME_HOME, { value: hre.ethers.parseEther("2") });
+
+      await gameBet
+        .connect(bettor2)
+        .placeBet(OUTCOME_HOME, { value: hre.ethers.parseEther("2") });
+
+      await gameBet.connect(bettor1).rateOrganizer(4);
+      await gameBet.connect(bettor2).rateOrganizer(3);
+
+      const ratings = await gameBetFactory.organizerRatings(booker);
+      expect(ratings.ratingCount).to.be.equal(2);
+      expect(ratings.totalRatings).to.be.equal(7);
+    });
+
     it("Should not allow organizer to rate his bets", async function () {
       const {
         gameBet,
