@@ -668,6 +668,22 @@ describe("GameBetFactory and GameBet Contracts", function () {
       );
     });
 
+    it("Should not allow organizer to rate his bets", async function () {
+      const {
+        gameBet,
+        booker,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      await expect(gameBet.connect(booker).rateOrganizer(4)).to.be.revertedWith(
+        "Organizer can't rate his own bets"
+      );
+    });
+
     it("Should not allow ratings that are not between 1 and 5", async function () {
       const {
         gameBet,

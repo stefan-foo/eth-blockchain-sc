@@ -38,18 +38,18 @@ const RatingDialog: React.FC<RatingDialogProps> = ({
             </button>
           ))}
         </div>
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white px-3 py-1 rounded mr-2"
-          >
-            Cancel
-          </button>
+        <div className="mt-4 flex gap-2 justify-center">
           <button
             onClick={handleSubmit}
             className="bg-blue-500 text-white px-3 py-1 rounded"
           >
             Submit
+          </button>
+          <button
+            onClick={onClose}
+            className="bg-gray-500 text-white px-3 py-1 rounded"
+          >
+            Cancel
           </button>
         </div>
       </div>

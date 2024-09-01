@@ -20,24 +20,24 @@ const KickoffTimeDialog: React.FC<KickoffTimeDialogProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-4 rounded shadow-md w-80">
-        <h3 className="text-lg font-semibold mb-4">Edit Kickoff Time</h3>
+      <div className="bg-white p-3 rounded shadow-md w-64">
+        <h3 className="text-base font-semibold mb-3">Edit Kickoff Time</h3>
         <input
           type="datetime-local"
           value={newKickoffTime.toISOString().slice(0, 16)}
           onChange={(e) => setNewKickoffTime(new Date(e.target.value))}
-          className="p-2 border border-gray-300 rounded w-full mb-4"
+          className="p-1 border border-gray-300 rounded w-full mb-3 text-sm"
         />
         <div className="flex justify-between">
           <button
             onClick={handleConfirm}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
           >
             Save
           </button>
           <button
             onClick={onClose}
-            className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+            className="bg-gray-300 text-black px-3 py-1 rounded hover:bg-gray-400 text-sm"
           >
             Cancel
           </button>

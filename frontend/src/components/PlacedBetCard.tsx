@@ -3,6 +3,7 @@ import { BetPick } from "../core/model/BetPick";
 import RatingDialog from "./RatingDialog";
 import { ethers } from "ethers";
 import { Outcome } from "../core/types/Outcome";
+import { getOutcomeStyle } from "../util/outcome-style.util";
 
 interface PlacedBetCardProps {
   betPick: BetPick;
@@ -31,13 +32,8 @@ const PlacedBetCard: React.FC<PlacedBetCardProps> = ({
   const formattedAmount = ethers.formatEther(BigInt(amount));
   const formattedKickoffTime = bet.kickoffTime.toLocaleString();
 
-  const getTeamStyle = (teamOutcome: boolean) => {
-    if (!bet.isResolved) return "text-black";
-    return teamOutcome ? "text-green-500 font-bold" : "text-red-500 font-bold";
-  };
-
-  const homeTeamStyle = getTeamStyle(bet.outcome === Outcome.HOME);
-  const awayTeamStyle = getTeamStyle(bet.outcome === Outcome.AWAY);
+  const homeTeamStyle = getOutcomeStyle(Outcome.HOME, bet.outcome);
+  const awayTeamStyle = getOutcomeStyle(Outcome.AWAY, bet.outcome);
 
   const getBetText = () => {
     return `Bet on ${
@@ -49,17 +45,13 @@ const PlacedBetCard: React.FC<PlacedBetCardProps> = ({
     <div className="border p-2 mb-2 shadow-sm bg-white rounded-sm text-sm">
       <div className="text-gray-500 text-xs mb-1 flex justify-between items-center">
         <div>{formattedKickoffTime}</div>
-        {bet.ratingCount !== undefined && bet.averageRating !== undefined && (
-          <div className="text-xs text-gray-600 flex justify-end gap-1">
-            <div className="font-semibold">
-              Average Rating:{" "}
-              {bet.averageRating || bet.averageRating === 0
-                ? "/"
-                : bet.averageRating.toFixed(1)}
-            </div>
-            <div className="text-gray-500">({bet.ratingCount} reviews)</div>
+        <div className="text-xs text-gray-600 flex justify-end gap-1">
+          <div className="font-semibold">
+            Average Rating:{" "}
+            {bet.ratingCount === 0 ? "/" : bet.averageRating.toFixed(1)}
           </div>
-        )}
+          <div className="text-gray-500">({bet.ratingCount} reviews)</div>
+        </div>
       </div>
 
       <div className="flex justify-between items-center mb-1">

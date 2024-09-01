@@ -7,7 +7,7 @@ import { useEthersContext } from "./contexts/ethers.context";
 import CreateBet from "./components/CreateBet";
 import BetCard from "./components/BetCard";
 import { BetInfo } from "./core/model/BetInfo";
-import { gameBet, gameBetFactory } from "./constants";
+import { gameBet } from "./constants";
 import { Outcome } from "./core/types/Outcome";
 import Header from "./components/Header";
 import Tabs from "./components/Tabs";
@@ -73,7 +73,7 @@ function App() {
           ratingCount: Number(ratings.ratingCount ?? 0n),
           averageRating:
             Number(ratings.totalRatings ?? 0n) /
-            Number(ratings.ratingCount === 0n ?? 1n),
+            Number(ratings.ratingCount !== 0n ? ratings.ratingCount : 1n),
         });
       }
 
@@ -157,7 +157,7 @@ function App() {
     }
   };
 
-  const handleClaim = async (betAddress: string) => {
+  const handleClaimPayout = async (betAddress: string) => {
     if (!provider || !account) {
       return;
     }
@@ -214,6 +214,26 @@ function App() {
     }
   };
 
+  const handleUpdateKickoff = async (betAddress: string, kickoffTime: Date) => {
+    if (!provider || !account) return;
+
+    const gameBetContract = new ethers.Contract(
+      betAddress,
+      gameBet.abi,
+      await provider.getSigner()
+    ) as BaseContract as GameBet;
+
+    try {
+      const tx = await gameBetContract.updateKickOffTime(
+        Math.floor(kickoffTime.getTime() / 1000)
+      );
+      await tx.wait();
+      alert("Kickofftime updated");
+    } catch (error: any) {
+      alert(error.reason ?? "Unknown error");
+    }
+  };
+
   if (!window.ethereum) {
     return <NoWalletDetected />;
   }
@@ -233,7 +253,7 @@ function App() {
               bet={bet}
               onPlaceBet={handlePlaceBet}
               onResolveBet={handleResolveBet}
-              onUpdateKickoff={null}
+              onUpdateKickoff={handleUpdateKickoff}
             />
           ))}
         </div>
@@ -273,7 +293,7 @@ function App() {
             <PlacedBetCard
               key={betPick.bet.address}
               betPick={betPick}
-              onClaim={handleClaim}
+              onClaim={handleClaimPayout}
               onRatingConfirmed={handleNewRating}
             />
           ))}

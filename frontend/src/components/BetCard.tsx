@@ -6,6 +6,7 @@ import { useEthersContext } from "../contexts/ethers.context";
 import { compareAddresses } from "../core/lib/blockchain-util";
 import ResolveDialog from "./ResolveDialog";
 import KickoffTimeDialog from "./KickoffTimeDialog";
+import { getOutcomeStyle } from "../util/outcome-style.util";
 
 interface BetCardProps {
   bet: BetInfo;
@@ -42,29 +43,30 @@ const BetCard: React.FC<BetCardProps> = ({
     if (onUpdateKickoff) onUpdateKickoff(bet.address, newKickoffTime);
     setEditKickoffDialogOpen(false);
   };
-  console.log(bet.averageRating);
+
   return (
     <div className="mb-4 bg-white rounded shadow-md flex-col items-start border border-gray-300">
       {bet.ratingCount !== undefined && bet.averageRating !== undefined && (
         <div className="text-xs text-gray-600 pr-4 pt-1 flex justify-end gap-1">
           <div className="font-semibold">
             Average Rating:{" "}
-            {bet.averageRating || bet.averageRating === 0
-              ? "/"
-              : bet.averageRating.toFixed(1)}
+            {bet.ratingCount === 0 ? "/" : bet.averageRating.toFixed(1)}
           </div>
-          <div className="text-gray-500">({bet.ratingCount} reviews)</div>
+          <div className="text-gray-500">
+            {`(${bet.ratingCount} ${
+              bet.ratingCount === 1 ? " review" : "reviews"
+            })`}
+          </div>
         </div>
       )}
 
       <div className="w-full p-4 pt-0 flex">
         <div className="flex flex-col items-center w-1/3">
           <div
-            className={`text-lg font-semibold mb-2 ${
-              bet.isResolved && bet.outcome === Outcome.HOME
-                ? "text-green-600"
-                : ""
-            }`}
+            className={`text-lg font-semibold mb-2 ${getOutcomeStyle(
+              Outcome.HOME,
+              bet.outcome
+            )}`}
           >
             {bet.homeTeam}
           </div>
@@ -140,11 +142,10 @@ const BetCard: React.FC<BetCardProps> = ({
 
         <div className="flex flex-col items-center w-1/3">
           <div
-            className={`text-lg font-semibold mb-2 ${
-              bet.isResolved && bet.outcome === Outcome.AWAY
-                ? "text-red-600"
-                : ""
-            }`}
+            className={`text-lg font-semibold mb-2 ${getOutcomeStyle(
+              Outcome.AWAY,
+              bet.outcome
+            )}`}
           >
             {bet.awayTeam}
           </div>
