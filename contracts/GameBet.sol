@@ -186,10 +186,7 @@ contract GameBet {
 
     function rateOrganizer(uint rating) public {
         Bet storage bet = bets[msg.sender];
-        require(
-            bet.amount > 0,
-            "You must have placed a bet to rate the organizer."
-        );
+        require(bet.amount > 0, "You must place a bet to rate the organizer");
         require(rating >= 1 && rating <= 5, "Rating must be between 1 and 5");
 
         factory.saveRating(organizer, rating);

@@ -1,7 +1,6 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
-import hre, { ethers } from "hardhat";
+import hre from "hardhat";
 
 const OUTCOME_OPEN = 0;
 const OUTCOME_HOME = 1;
@@ -239,7 +238,6 @@ describe("GameBetFactory and GameBet Contracts", function () {
 
       let openBets = await gameBetFactory.getOpenBets();
       expect(openBets).to.include(gameBetAddress);
-
       let resolvedBets = await gameBetFactory.getResolvedBets();
       expect(resolvedBets).to.not.include(gameBetAddress);
 
@@ -603,6 +601,84 @@ describe("GameBetFactory and GameBet Contracts", function () {
           }
         }
       });
+    });
+  });
+
+  describe("Rating organizers", function () {
+    it("Should allow bettor to rate organizer", async function () {
+      const {
+        gameBetFactory,
+        gameBet,
+        booker,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      const rating = 4;
+
+      await gameBet
+        .connect(bettor)
+        .placeBet(OUTCOME_HOME, { value: hre.ethers.parseEther("2") });
+
+      await gameBet.connect(bettor).rateOrganizer(rating);
+
+      const organizerRating = await gameBetFactory.organizerRatings(
+        booker.address
+      );
+
+      expect(organizerRating.totalRatings).to.equal(rating);
+      expect(organizerRating.ratingCount).to.equal(1);
+    });
+
+    it("Should not allow non bettors to rate organizer", async function () {
+      const {
+        gameBet,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      await expect(gameBet.connect(bettor).rateOrganizer(4)).to.be.revertedWith(
+        "You must place a bet to rate the organizer"
+      );
+    });
+
+    it("Should not allow ratings that are not between 1 and 5", async function () {
+      const {
+        gameBet,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      const rating = 6;
+
+      await gameBet
+        .connect(bettor)
+        .placeBet(OUTCOME_HOME, { value: hre.ethers.parseEther("2") });
+
+      await expect(
+        gameBet.connect(bettor).rateOrganizer(rating)
+      ).to.be.revertedWith("Rating must be between 1 and 5");
+    });
+
+    it("Should not allow direct call to factory rate method", async function () {
+      const {
+        gameBetFactory,
+        booker,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+
+      await expect(
+        gameBetFactory.connect(bettor).saveRating(booker, 3)
+      ).to.be.revertedWith("Caller is not an authorized GameBet contract");
     });
   });
 });

@@ -58,7 +58,10 @@ contract GameBetFactory {
         return resolvedBets;
     }
 
-    function saveRating(address organizer, uint rating) external {
+    function saveRating(
+        address organizer,
+        uint rating
+    ) external onlyDeployedGameBets {
         require(rating >= 1 && rating <= 5, "Rating must be between 1 and 5");
 
         OrganizerRating storage organizerRating = organizerRatings[organizer];
