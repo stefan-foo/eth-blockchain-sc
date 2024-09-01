@@ -7,7 +7,7 @@ import { useEthersContext } from "./contexts/ethers.context";
 import CreateBet from "./components/CreateBet";
 import BetCard from "./components/BetCard";
 import { BetInfo } from "./core/model/BetInfo";
-import { gameBet, gameBetFactory } from "./constants";
+import { gameBet } from "./constants";
 import { Outcome } from "./core/types/Outcome";
 import Header from "./components/Header";
 import Tabs from "./components/Tabs";
