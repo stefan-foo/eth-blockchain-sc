@@ -13,9 +13,9 @@ const ResolveDialog: React.FC<ResolveDialogProps> = ({
   const [selectedOutcome, setSelectedOutcome] = useState<Outcome | null>(null);
 
   const handleConfirm = () => {
+    console.log(selectedOutcome);
     if (selectedOutcome !== null) {
       onResolve(selectedOutcome);
-      onClose();
     }
   };
 

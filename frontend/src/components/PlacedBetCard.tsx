@@ -7,9 +7,14 @@ import { Outcome } from "../core/types/Outcome";
 interface PlacedBetCardProps {
   betPick: BetPick;
   onClaim: (betAddress: string) => void;
+  onRatingConfirmed: (betAddress: string, rating: number) => void;
 }
 
-const PlacedBetCard: React.FC<PlacedBetCardProps> = ({ betPick, onClaim }) => {
+const PlacedBetCard: React.FC<PlacedBetCardProps> = ({
+  betPick,
+  onClaim,
+  onRatingConfirmed,
+}) => {
   const { bet, outcome, amount, claimed } = betPick;
   const [isRatingDialogOpen, setRatingDialogOpen] = useState(false);
 
@@ -31,37 +36,42 @@ const PlacedBetCard: React.FC<PlacedBetCardProps> = ({ betPick, onClaim }) => {
     return teamOutcome ? "text-green-500 font-bold" : "text-red-500 font-bold";
   };
 
-  const homeTeamStyle = getTeamStyle(outcome === Outcome.HOME);
-  const awayTeamStyle = getTeamStyle(outcome === Outcome.AWAY);
+  const homeTeamStyle = getTeamStyle(bet.outcome === Outcome.HOME);
+  const awayTeamStyle = getTeamStyle(bet.outcome === Outcome.AWAY);
 
   const getBetText = () => {
-    return bet.outcome === outcome
-      ? `Bet on ${
-          outcome === Outcome.HOME ? "Home" : "Away"
-        } ${formattedAmount} ETH`
-      : `Bet on ${
-          outcome === Outcome.HOME ? "Away" : "Home"
-        } ${formattedAmount} ETH`;
+    return `Bet on ${
+      outcome === Outcome.HOME ? "Home" : "Away"
+    } ${formattedAmount} ETH`;
   };
 
   return (
     <div className="border p-2 mb-2 shadow-sm bg-white rounded-sm text-sm">
-      {/* Kickoff Time */}
-      <div className="text-gray-500 text-xs mb-1">{formattedKickoffTime}</div>
+      <div className="text-gray-500 text-xs mb-1 flex justify-between items-center">
+        <div>{formattedKickoffTime}</div>
+        {bet.ratingCount !== undefined && bet.averageRating !== undefined && (
+          <div className="text-xs text-gray-600 flex justify-end gap-1">
+            <div className="font-semibold">
+              Average Rating:{" "}
+              {bet.averageRating || bet.averageRating === 0
+                ? "/"
+                : bet.averageRating.toFixed(1)}
+            </div>
+            <div className="text-gray-500">({bet.ratingCount} reviews)</div>
+          </div>
+        )}
+      </div>
 
-      {/* Teams Display */}
       <div className="flex justify-between items-center mb-1">
         <span className={homeTeamStyle}>{bet.homeTeam}</span>
         <span className="text-gray-400">vs.</span>
         <span className={awayTeamStyle}>{bet.awayTeam}</span>
       </div>
 
-      {/* Bet Details */}
       <div className="text-gray-600 text-xs mb-2">{getBetText()}</div>
 
-      {/* Action Buttons */}
       <div className="flex justify-center space-x-2">
-        {bet.isResolved && !claimed && (
+        {bet.isResolved && !claimed && outcome === bet.outcome && (
           <button
             onClick={handleClaim}
             className="bg-green-500 text-white px-3 py-1 rounded-sm text-xs"
@@ -80,6 +90,10 @@ const PlacedBetCard: React.FC<PlacedBetCardProps> = ({ betPick, onClaim }) => {
       {isRatingDialogOpen && (
         <RatingDialog
           onClose={() => setRatingDialogOpen(false)}
+          onConfirm={(rating) => {
+            onRatingConfirmed(bet.address, rating);
+            setRatingDialogOpen(false);
+          }}
           betAddress={bet.address}
         />
       )}

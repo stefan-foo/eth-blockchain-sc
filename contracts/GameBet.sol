@@ -15,7 +15,9 @@ contract GameBet {
     uint public totalPool;
     uint public totalBetHome;
     uint public totalBetAway;
-    GameBetFactory factory;
+    GameBetFactory private factory;
+
+    mapping(address => bool) private raters;
 
     enum Outcome {
         Open,
@@ -32,7 +34,6 @@ contract GameBet {
 
     event BetPlaced(address indexed better, Outcome team, uint amount);
     event ResultDeclared(Outcome result);
-    event PayoutClaimed(address indexed better, uint amount);
     event KickOffTimeUpdated(uint newKickOffTime);
     event MatchFinished(
         address indexed matchAddress,
@@ -139,8 +140,6 @@ contract GameBet {
         if (payout > 0) {
             payable(msg.sender).transfer(payout);
         }
-
-        emit PayoutClaimed(msg.sender, payout);
     }
 
     function getContractDetails()
@@ -190,7 +189,12 @@ contract GameBet {
         Bet storage bet = bets[msg.sender];
         require(bet.amount > 0, "You must place a bet to rate the organizer");
         require(rating >= 1 && rating <= 5, "Rating must be between 1 and 5");
+        require(
+            raters[msg.sender] == false,
+            "Organizer has already been rated for this bet"
+        );
 
+        raters[msg.sender] = true;
         factory.saveRating(organizer, rating);
     }
 

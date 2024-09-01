@@ -2,10 +2,15 @@ import React, { useState } from "react";
 
 interface RatingDialogProps {
   onClose: () => void;
+  onConfirm: (rating: number) => void;
   betAddress: string;
 }
 
-const RatingDialog: React.FC<RatingDialogProps> = ({ onClose, betAddress }) => {
+const RatingDialog: React.FC<RatingDialogProps> = ({
+  onClose,
+  onConfirm,
+  betAddress,
+}) => {
   const [rating, setRating] = useState<number>(0);
 
   const handleRatingChange = (newRating: number) => {
@@ -13,7 +18,7 @@ const RatingDialog: React.FC<RatingDialogProps> = ({ onClose, betAddress }) => {
   };
 
   const handleSubmit = () => {
-    onClose();
+    onConfirm(rating);
   };
 
   return (

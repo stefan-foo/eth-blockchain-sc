@@ -10,4 +10,6 @@ export interface BetInfo {
   totalBetAway: number;
   isResolved: boolean;
   outcome: Outcome;
+  averageRating: number;
+  ratingCount: number;
 }

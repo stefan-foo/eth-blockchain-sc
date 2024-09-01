@@ -30,54 +30,54 @@ const CreateBet: React.FC = () => {
       setHome("");
       setAway("");
       setKickoffDate("");
-    } catch (error) {
+    } catch (error: any) {
+      alert(error?.reason);
       setError("Error creating game bet. Please try again.");
-      console.error("Error creating game bet:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-6 bg-gray-100 rounded-lg shadow-lg max-w-lg mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+    <div className="p-4 bg-gray-100 rounded-lg shadow-lg max-w-md mx-auto h-full">
+      <h2 className="text-xl font-semibold mb-3 text-center text-gray-800">
         Create New Bet
       </h2>
-      {error && <div className="mb-4 text-red-600 text-center">{error}</div>}
-      <div className="mb-4">
-        <label className="block mb-2 text-gray-700">Home Team</label>
+      {error && <div className="mb-3 text-red-600 text-center">{error}</div>}
+      <div className="mb-3">
+        <label className="block mb-1 text-gray-700 text-sm">Home Team</label>
         <input
           type="text"
           value={home}
           onChange={(e) => setHome(e.target.value)}
-          className="p-3 border border-gray-300 rounded w-full"
+          className="p-2 border border-gray-300 rounded w-full text-sm"
           placeholder="Enter home team name"
         />
       </div>
-      <div className="mb-4">
-        <label className="block mb-2 text-gray-700">Away Team</label>
+      <div className="mb-3">
+        <label className="block mb-1 text-gray-700 text-sm">Away Team</label>
         <input
           type="text"
           value={away}
           onChange={(e) => setAway(e.target.value)}
-          className="p-3 border border-gray-300 rounded w-full"
+          className="p-2 border border-gray-300 rounded w-full text-sm"
           placeholder="Enter away team name"
         />
       </div>
-      <div className="mb-4">
-        <label className="block mb-2 text-gray-700">Kickoff Time</label>
+      <div className="mb-3">
+        <label className="block mb-1 text-gray-700 text-sm">Kickoff Time</label>
         <input
           type="datetime-local"
           value={kickoffDate}
           onChange={(e) => setKickoffDate(e.target.value)}
-          className="p-3 border border-gray-300 rounded w-full"
+          className="p-2 border border-gray-300 rounded w-full text-sm"
         />
       </div>
       <button
         onClick={handleCreateBet}
-        className={`w-full p-3 rounded text-white ${
+        className={`w-full p-2 rounded text-white ${
           loading ? "bg-blue-400" : "bg-blue-500"
-        } hover:bg-blue-600`}
+        } hover:bg-blue-600 text-sm`}
         disabled={loading}
       >
         {loading ? "Creating Bet..." : "Create Bet"}

@@ -648,6 +648,26 @@ describe("GameBetFactory and GameBet Contracts", function () {
       );
     });
 
+    it("Should not allow 2nd rating via same game bet", async function () {
+      const {
+        gameBet,
+        bettors: [bettor],
+      } = await loadFixture(deployContractsFixture);
+
+      if (!gameBet) {
+        return expect(gameBet).to.not.be.null;
+      }
+
+      await gameBet
+        .connect(bettor)
+        .placeBet(OUTCOME_HOME, { value: hre.ethers.parseEther("2") });
+
+      await gameBet.connect(bettor).rateOrganizer(4);
+      await expect(gameBet.connect(bettor).rateOrganizer(4)).to.be.revertedWith(
+        "Organizer has already been rated for this bet"
+      );
+    });
+
     it("Should not allow ratings that are not between 1 and 5", async function () {
       const {
         gameBet,

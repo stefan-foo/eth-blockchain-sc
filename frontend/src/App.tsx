@@ -7,7 +7,7 @@ import { useEthersContext } from "./contexts/ethers.context";
 import CreateBet from "./components/CreateBet";
 import BetCard from "./components/BetCard";
 import { BetInfo } from "./core/model/BetInfo";
-import { gameBet } from "./constants";
+import { gameBet, gameBetFactory } from "./constants";
 import { Outcome } from "./core/types/Outcome";
 import Header from "./components/Header";
 import Tabs from "./components/Tabs";
@@ -56,6 +56,10 @@ function App() {
           gameBetContract.totalBetAway(),
         ]);
 
+        const ratings = await factoryContract.organizerRatings(
+          ethers.getAddress(organizer)
+        );
+
         bets.push({
           address,
           homeTeam,
@@ -66,13 +70,18 @@ function App() {
           isResolved: Number(outcome) !== Outcome.OPEN,
           outcome: Number(outcome) as Outcome,
           organizer,
+          ratingCount: Number(ratings.ratingCount ?? 0n),
+          averageRating:
+            Number(ratings.totalRatings ?? 0n) /
+            Number(ratings.ratingCount === 0n ?? 1n),
         });
       }
 
-      if (sortAscending)
+      if (sortAscending) {
         bets.sort((a, b) => a.kickoffTime.getTime() - b.kickoffTime.getTime());
-      else
+      } else {
         bets.sort((a, b) => b.kickoffTime.getTime() - a.kickoffTime.getTime());
+      }
 
       return bets;
     };
@@ -122,50 +131,88 @@ function App() {
     fetchBets();
   }, [fetchBets]);
 
-  const handlePlaceBet = useCallback(
-    async (betAddress: string, outcome: Outcome, amount: string) => {
-      if (provider && account) {
-        const gameBetContract = new ethers.Contract(
-          betAddress,
-          gameBet.abi,
-          await provider.getSigner()
-        ) as BaseContract as GameBet;
+  const handlePlaceBet = async (
+    betAddress: string,
+    outcome: Outcome,
+    amount: string
+  ) => {
+    if (!provider || !account) {
+      return;
+    }
 
-        try {
-          const tx = await gameBetContract.placeBet(outcome, {
-            value: ethers.parseEther(amount),
-          });
-          await tx.wait();
-          alert("Bet placed successfully");
-          fetchBets();
-        } catch (error: any) {
-          alert(error.reason ?? "Unknown error");
-        }
-      }
-    },
-    [provider, account, fetchBets]
-  );
+    const gameBetContract = new ethers.Contract(
+      betAddress,
+      gameBet.abi,
+      await provider.getSigner()
+    ) as BaseContract as GameBet;
 
-  const handleClaim = useCallback(
-    async (betAddress: string) => {
-      if (provider && account) {
-        const gameBetContract = new ethers.Contract(
-          betAddress,
-          gameBet.abi,
-          await provider.getSigner()
-        ) as BaseContract as GameBet;
+    try {
+      const tx = await gameBetContract.placeBet(outcome, {
+        value: ethers.parseEther(amount),
+      });
+      await tx.wait();
+      alert("Bet placed successfully");
+    } catch (error: any) {
+      alert(error.reason ?? "Unknown error");
+    }
+  };
 
-        try {
-          const tx = await gameBetContract.claimPayout();
-          await tx.wait();
-          alert("Claimed successfully");
-        } catch (error: any) {
-          alert(error.reason ?? "Unknown error");
-        }
-      }
-    },
-    [provider, account]
-  );
+  const handleClaim = async (betAddress: string) => {
+    if (!provider || !account) {
+      return;
+    }
+
+    const gameBetContract = new ethers.Contract(
+      betAddress,
+      gameBet.abi,
+      await provider.getSigner()
+    ) as BaseContract as GameBet;
+
+    try {
+      const tx = await gameBetContract.claimPayout();
+      await tx.wait();
+      alert("Claimed successfully");
+      fetchBets();
+    } catch (error: any) {
+      alert(error.reason ?? "Unknown error");
+    }
+  };
+
+  const handleResolveBet = async (betAddress: string, outcome: Outcome) => {
+    if (!provider || !account) return;
+
+    const gameBetContract = new ethers.Contract(
+      betAddress,
+      gameBet.abi,
+      await provider.getSigner()
+    ) as BaseContract as GameBet;
+
+    try {
+      const tx = await gameBetContract.resolve(outcome);
+      await tx.wait();
+      alert("Bet resolved");
+    } catch (error: any) {
+      alert(error.reason ?? "Unknown error");
+    }
+  };
+
+  const handleNewRating = async (betAddress: string, rating: number) => {
+    if (!provider || !account) return;
+
+    const gameBetContract = new ethers.Contract(
+      betAddress,
+      gameBet.abi,
+      await provider.getSigner()
+    ) as BaseContract as GameBet;
+
+    try {
+      const tx = await gameBetContract.rateOrganizer(rating);
+      await tx.wait();
+      alert("Organizer rated");
+    } catch (error: any) {
+      alert(error.reason ?? "Unknown error");
+    }
+  };
 
   if (!window.ethereum) {
     return <NoWalletDetected />;
@@ -181,7 +228,13 @@ function App() {
       content: (
         <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
           {openBets.map((bet) => (
-            <BetCard key={bet.address} bet={bet} onPlaceBet={handlePlaceBet} />
+            <BetCard
+              key={bet.address}
+              bet={bet}
+              onPlaceBet={handlePlaceBet}
+              onResolveBet={handleResolveBet}
+              onUpdateKickoff={null}
+            />
           ))}
         </div>
       ),
@@ -191,7 +244,13 @@ function App() {
       content: (
         <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
           {resolvedBets.map((bet) => (
-            <BetCard key={bet.address} bet={bet} onPlaceBet={handlePlaceBet} />
+            <BetCard
+              key={bet.address}
+              bet={bet}
+              onPlaceBet={handlePlaceBet}
+              onResolveBet={null}
+              onUpdateKickoff={null}
+            />
           ))}
         </div>
       ),
@@ -215,6 +274,7 @@ function App() {
               key={betPick.bet.address}
               betPick={betPick}
               onClaim={handleClaim}
+              onRatingConfirmed={handleNewRating}
             />
           ))}
         </div>
